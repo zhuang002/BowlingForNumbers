@@ -32,17 +32,13 @@ public class Main {
 			scores[i] = Integer.parseInt(reader.readLine());
 		}
 		
-		cacheHighScore = new int[n][k+1];
-		for (int i=0;i<n;i++) {
-			for (int j=0;j<=k;j++) {
-				cacheHighScore[i][j]=-1;
-			}
-		}
+		
 		
 		cacheSum1 = new int[n];
-		cacheSum1[n-1] = scores[n-1];
-		for (int i=n-2;i>=0;i--) {
-			cacheSum1[i] = cacheSum1[i+1]+scores[i];
+		int sum=0;
+		for (int i=0;i<n;i++) {
+			sum+=scores[n-1-i];
+			cacheSum1[n-1-i] = sum;
 		}
 		
 		cacheSum2 = new int[n][w+1];
@@ -55,12 +51,37 @@ public class Main {
 			}
 		}
 		
-		System.out.println(getHighestScore(0,k));
+		
+		cacheHighScore = new int[n][k+1];
+		for (int start=n-1;start>=0;start--) {
+			for (int kThrows=1;kThrows<=k;kThrows++) {
+				int length = n-start;
+				
+				if (length<=w*kThrows)
+					cacheHighScore[start][kThrows]=cacheSum1[start];
+				else {
+					int max=0;
+					int score = cacheHighScore[start+1][kThrows];
+					if (max<score) max=score;
+					
+					for (int hits=1;hits<=w;hits++) {
+						score = cacheSum2[start][hits]+cacheHighScore[start+hits][kThrows-1];
+						if (max<score) max=score;
+					}
+					cacheHighScore[start][kThrows] = max;
+					
+				}
+			}
+		}
+		
+		System.out.println(cacheHighScore[0][k]);
 	}
 
 	private static int getHighestScore(int start, int kThrows) {
 		// TODO Auto-generated method stub
 		if (kThrows==0)
+			return 0;
+		if (start>=n)
 			return 0;
 		int length=n-start;
 		
@@ -68,7 +89,7 @@ public class Main {
 			return cacheHighScore[start][kThrows];
 		
 		
-		if (length<=3 || length<w*kThrows) {
+		if (length<w*kThrows) {
 			return cacheSum1[start];
 		}
 
@@ -82,7 +103,7 @@ public class Main {
 		
 		
 		for (int hits=1;hits<=w;hits++) {
-			score = getSum(start,hits)+getHighestScore(start+hits,kThrows-1);
+			score = cacheSum2[start][hits]+getHighestScore(start+hits,kThrows-1);
 			if (max<score) max=score;
 		}
 		
@@ -90,22 +111,4 @@ public class Main {
 		cacheHighScore[start][kThrows] = max;
 		return max;
 	}
-
-	private static int getSum(int start, int hits) {
-		// TODO Auto-generated method stub
-		if (hits == 0) return 0;
-		if (hits == 1) return scores[start];
-		if (hits == 2) return scores[start]+scores[start+1];
-		
-		if (cacheSum2[start][hits]!=-1) return cacheSum2[start][hits];
-		int sum = getSum(start,hits-1) + scores[start+hits-1];
-		cacheSum2[start][hits-1] = sum;
-		return sum;
-	}
-
-
-
 }
-
-
-
